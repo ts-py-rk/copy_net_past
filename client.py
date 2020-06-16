@@ -1,14 +1,29 @@
 import pyperclip, time, socket, pickle, threading
 
-#  Hello! I'm macbook!
-
+#                                           # функция обертка для запуска потоков
 def thread(my_func):
     def wrapper(*args, **kwargs):
         my_thread = threading.Thread(target=my_func, args=args, kwargs=kwargs)
         my_thread.start()
     return wrapper
 
-@thread
+#                                           # функция подключения к указанному серверу
+def input_server():
+
+    # input_ip = input('Input server IP.\nPress to Enter if server 192.168.1.11 \n') # ручной
+    # if input_ip == '':                                                             # ввод IP
+    #     input_ip = '192.168.1.11'                                                  # сервера
+
+    input_ip = '192.168.1.11'                                                        # автоматически
+
+    ###### можно добавить ввод порта #######
+
+    global server, sor
+    server = input_ip, 5050
+    sor = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sor.bind(('', 0))
+
+@thread                                     # функция отправки буфера на сервер
 def send_bufer(second):
     local = threading.local()
     local.local_bufer = set()
@@ -25,25 +40,29 @@ def send_bufer(second):
             local.local_bufer = local.local_bufer & local.local_bufer_now
         time.sleep(second)
 
-print('Start client')
-pyperclip.copy('Hello! I am macbook!')
-server = '192.168.1.11', 5050
-sor = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-sor.bind(('', 0))
-send_bufer(1)
+@thread                                     # функция бесконечного цикла приема сетевого буфера
+def net_in_loc():
+    while True:
+        data = sor.recv(1024)
+        net_bufer = pickle.loads(data)
+        if net_bufer not in bufer:
+            abc = str(net_bufer)
+            bca = abc[2:len(abc) - 2]
+            pyperclip.copy(bca)
+            print(bca, 'add in bufer')
+        time.sleep(1)
 
-bbuuffeerr = set()
-bbuuffeerr.add(pyperclip.paste())
+###################################################################################################
 
+print('Start client')                       # стартовое приветствие
+pyperclip.copy('Hello! I am macbook!')      # стартовый пакет будет таким
 
-while True:
-    data = sor.recv(1024)
-    net_bufer = pickle.loads(data)
-    print(net_bufer)
-    if net_bufer not in bbuuffeerr:
-        abc = str(net_bufer)
-        bca = abc[2:len(abc) - 2]
-        pyperclip.copy(bca)
-        print(bca, 'add in bufer')
-    time.sleep(1)
+input_server()                              # подключаемся к указанному серверу
+
+send_bufer(1)                               # запуск потока отправки буфера на сервер
+
+bufer = set()                               # создание множества для буфера
+bufer.add(pyperclip.paste())                # добавляем во множество буфер обмена
+
+net_in_loc()                                # запускаем  в потоке
 
