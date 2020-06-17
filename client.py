@@ -1,4 +1,4 @@
-import pyperclip, time, socket, pickle, threading
+import pyperclip, time, socket, pickle, threading, sys, select
 
 #                                           # функция обертка для запуска потоков
 def thread(my_func):
@@ -8,18 +8,25 @@ def thread(my_func):
     return wrapper
 
 #                                           # функция подключения к указанному серверу
-def input_server():
+def input_server(ip, port, sec):
 
-    # input_ip = input('Input server IP.\nPress to Enter if server 192.168.1.11 \n') # ручной
-    # if input_ip == '':                                                             # ввод IP
-    #     input_ip = '192.168.1.11'                                                  # сервера
+    ip_def = ip
+    port_def = port
+    print(f'Идет подключение к {ip}\nНажмите Enter для подключения к другому серверу)')
 
-    input_ip = '192.168.1.11'                                                        # автоматически
-
-    ###### можно добавить ввод порта #######
+    rlist, _, _ = select.select([sys.stdin], [], [], sec)
+    if rlist:
+        ip = sys.stdin.readline()
+        if ip == '\n':
+            ip = input(' Введите IP: ')
+            port = int(input(' Введите порт:' ))
+            print(f'Подключаемся к {ip}:{port} ')
+        else:
+            ip = ip_def
+            port = port_def
 
     global server, sor
-    server = input_ip, 5050
+    server = ip, port
     sor = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sor.bind(('', 0))
 
@@ -57,7 +64,7 @@ def net_in_loc():
 print('Start client')                       # стартовое приветствие
 pyperclip.copy('Hello! I am macbook!')      # стартовый пакет будет таким
 
-input_server()                              # подключаемся к указанному серверу
+input_server('192.168.1.11', 5050, 3)                              # подключаемся к указанному серверу
 
 send_bufer(1)                               # запуск потока отправки буфера на сервер
 
