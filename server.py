@@ -11,16 +11,20 @@ print('Ждем подключения клиентов\n')
 
 while 1:
     data, addres = sock.recvfrom(1024)
+    print('1', ',addres', addres, 'send data:', data)
     pack = pickle.loads(data)
-    print('Addres', addres, 'send:', pack)
-
+    print('2 Addres', addres, 'send pack:', pack)
+    print('3', clients)
     if addres not in clients:
-        print('Connecting client ', addres)
+        print('4', addres)
+        print('5 Connecting client ', addres)
         clients.append(addres)
-        print('Connected clients: ', clients)
-
+        print('6 Connected clients: ', clients)
+    print('7', clients)
     for client in clients:
+        print('8', client)
         if client != addres:
+            print('9', client, 'data:', data, 'to', client)
             sock.sendto(data, client)
-            print(client, 'Send', pickle.loads(data), 'to', client)
+            print('10', client, 'Send', pickle.loads(data), 'to', client)
     time.sleep(1)
