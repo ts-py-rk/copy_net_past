@@ -1,30 +1,44 @@
 # -*- coding: utf-8 -*-
+import socket, time, pickle, select, sys
 
-import socket, time, pickle
+def start_server(port_def, sec):
+    ip = socket.gethostbyname(socket.gethostname())
+    print('Start server  - ', ip, ':', port_def)
+    print('Press ENTER within', sec, 'seconds to set the port')
+    global port
+    port = port_def
+    rlist, _, _ = select.select([sys.stdin], [], [], sec)
+    if rlist:
+        port = sys.stdin.readline()
+        if port == '\n':
+            exit = True
+            while exit:
+                try:
+                    port = int(input(' Введите порт: '))
+                except ValueError:
+                    print('Неверный ввод порта')
+                else:
+                    exit = False
+            print('Start server', ip, ':', port)
+        else:
+            port = port_def
 
+start_server(666, 3)
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-sock.bind(('', 5050))
-
+sock.bind(('', port))
 clients = []
-print('Start Server')
-print('Ждем подключения клиентов\n')
+print('\nЖдем подключения клиентов\n')
 
 while 1:
     data, addres = sock.recvfrom(1024)
-    print('1', ',addres', addres, 'send data:', data)
     pack = pickle.loads(data)
-    print('2 Addres', addres, 'send pack:', pack)
-    print('3', clients)
+    print(addres, 'send:', pack)
     if addres not in clients:
-        print('4', addres)
-        print('5 Connecting client ', addres)
+        print('Connecting client ', addres)
         clients.append(addres)
-        print('6 Connected clients: ', clients)
-    print('7', clients)
+        print('Connected clients: ', clients)
     for client in clients:
-        print('8', client)
         if client != addres:
-            print('9', client, 'data:', data, 'to', client)
             sock.sendto(data, client)
-            print('10', client, 'Send', pickle.loads(data), 'to', client)
+            print('Send to',client, ':', pickle.loads(data))
     time.sleep(1)
